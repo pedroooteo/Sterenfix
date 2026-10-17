@@ -1,11 +1,19 @@
 
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>{% block title %}Sterenfix{% endblock %}</title>
+
+    <!-- Aplicar tema guardado antes de mostrar la página -->
+    <script>
+        (function () {
+            const theme = localStorage.getItem('sterenfix-theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -16,6 +24,27 @@
             --background: #f4f7fb;
             --text: #1e293b;
             --muted: #64748b;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --nav-color: #475569;
+            --nav-hover: #eff6ff;
+            --icon-bg: #eff6ff;
+        }
+
+        [data-bs-theme="dark"] {
+            --primary: #60a5fa;
+            --background: #0f172a;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --sidebar-bg: #1e293b;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --nav-color: #cbd5e1;
+            --nav-hover: #334155;
+            --icon-bg: #334155;
+
+            color-scheme: dark;
         }
 
         body {
@@ -23,7 +52,10 @@
             background: var(--background);
             color: var(--text);
             font-family: 'Segoe UI', Arial, sans-serif;
+            transition: background 0.2s, color 0.2s;
         }
+
+        /* SIDEBAR */
 
         .sidebar {
             width: 250px;
@@ -32,8 +64,8 @@
             top: 0;
             left: 0;
             padding: 28px 16px 20px;
-            background: #fff;
-            border-right: 1px solid #e2e8f0;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             overflow-y: auto;
@@ -59,14 +91,14 @@
             margin-bottom: 7px;
             border-radius: 10px;
             text-decoration: none;
-            color: #475569;
+            color: var(--nav-color);
             font-weight: 500;
             transition: background 0.2s, color 0.2s;
         }
 
         .sidebar nav a:hover,
         .sidebar nav a.active {
-            background: #eff6ff;
+            background: var(--nav-hover);
             color: var(--primary);
         }
 
@@ -75,8 +107,10 @@
             text-align: center;
         }
 
+        /* PANEL DEL USUARIO */
+
         .user-panel {
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--border-color);
             padding-top: 18px;
             margin-top: 20px;
         }
@@ -93,7 +127,7 @@
             height: 39px;
             flex-shrink: 0;
             border-radius: 11px;
-            background: #eff6ff;
+            background: var(--icon-bg);
             color: var(--primary);
             display: flex;
             align-items: center;
@@ -120,6 +154,33 @@
             max-width: 155px;
         }
 
+        /* BOTÓN DE MODO OSCURO */
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 11px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            background: var(--nav-hover);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--icon-bg);
+            color: var(--primary);
+        }
+
+        /* CERRAR SESIÓN */
+
         .logout-button {
             display: flex;
             align-items: center;
@@ -142,6 +203,19 @@
             color: #b91c1c;
         }
 
+        [data-bs-theme="dark"] .logout-button {
+            background: #450a0a;
+            border-color: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        [data-bs-theme="dark"] .logout-button:hover {
+            background: #7f1d1d;
+            color: #ffffff;
+        }
+
+        /* CONTENIDO PRINCIPAL */
+
         .main-content {
             margin-left: 250px;
             padding: 36px;
@@ -156,10 +230,12 @@
             color: var(--muted);
         }
 
+        /* TARJETAS */
+
         .stat-card,
         .section-card {
-            background: #fff;
-            border: 1px solid #e2e8f0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 25px;
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
@@ -184,13 +260,42 @@
             width: 48px;
             height: 48px;
             border-radius: 12px;
-            background: #eff6ff;
+            background: var(--icon-bg);
             color: var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 23px;
         }
+
+        /* COMPONENTES BOOTSTRAP EN MODO OSCURO */
+
+        [data-bs-theme="dark"] .card,
+        [data-bs-theme="dark"] .modal-content,
+        [data-bs-theme="dark"] .dropdown-menu {
+            background-color: #1e293b;
+            border-color: #334155;
+            color: #f1f5f9;
+        }
+
+        [data-bs-theme="dark"] .table {
+            --bs-table-bg: #1e293b;
+            --bs-table-color: #f1f5f9;
+            --bs-table-border-color: #334155;
+        }
+
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select {
+            background-color: #0f172a;
+            border-color: #475569;
+            color: #f1f5f9;
+        }
+
+        [data-bs-theme="dark"] .form-control::placeholder {
+            color: #94a3b8;
+        }
+
+        /* RESPONSIVE */
 
         @media (max-width: 768px) {
             .sidebar {
@@ -261,26 +366,29 @@
                 Registros
             </a>
 
-            
-                <a href="{{ path('app_reportes') }}"
-                class="nav-link {{ app.request.attributes.get('_route') == 'app_reportes' ? 'active' : '' }}">
-                    <i class="bi bi-bar-chart-line"></i>
-                    <span>Reportes</span>
-                </a>
-
+            <a href="{{ path('app_reportes') }}"
+               class="{{ currentRoute == 'app_reportes' ? 'active' : '' }}">
+                <i class="bi bi-bar-chart-line"></i>
+                Reportes
+            </a>
 
             {% if is_granted('ROLE_ADMIN') %}
                 <a href="{{ path('app_usuarios') }}"
-                class="{{ currentRoute == 'app_usuarios' ? 'active' : '' }}">
+                   class="{{ currentRoute == 'app_usuarios' ? 'active' : '' }}">
                     <i class="bi bi-person-gear"></i>
                     Usuarios
                 </a>
             {% endif %}
-
         </nav>
 
         {% if app.user %}
             <div class="user-panel">
+
+                <!-- CAMBIAR MODO CLARO / OSCURO -->
+                <button type="button" class="theme-toggle" id="themeToggle">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                    <span id="themeText">Modo oscuro</span>
+                </button>
 
                 <div class="user-info">
                     <div class="user-avatar">
@@ -314,6 +422,43 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- CAMBIO DE TEMA -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+
+            function updateThemeButton() {
+                const dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+
+                if (themeIcon) {
+                    themeIcon.className = dark
+                        ? 'bi bi-sun-fill'
+                        : 'bi bi-moon-stars-fill';
+                }
+
+                if (themeText) {
+                    themeText.textContent = dark ? 'Modo claro' : 'Modo oscuro';
+                }
+            }
+
+            updateThemeButton();
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function () {
+                    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                    document.documentElement.setAttribute('data-bs-theme', newTheme);
+                    localStorage.setItem('sterenfix-theme', newTheme);
+
+                    updateThemeButton();
+                });
+            }
+        });
+    </script>
 
     {% block javascripts %}{% endblock %}
 
