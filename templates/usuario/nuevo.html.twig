@@ -1,0 +1,184 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Nuevo usuario | Sterenfix{% endblock %}
+
+{% block body %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Nuevo usuario</h1>
+        <p class="subtitle mb-0">
+            Registrá una nueva cuenta para acceder a Sterenfix.
+        </p>
+    </div>
+
+    <a href="{{ path('app_usuarios') }}"
+       class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>
+        Volver
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 col-xl-7">
+
+        <div class="section-card">
+
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="stat-icon">
+                    <i class="bi bi-person-plus"></i>
+                </div>
+
+                <div>
+                    <h5 class="fw-bold mb-1">Información de la cuenta</h5>
+                    <p class="text-secondary small mb-0">
+                        Completá los datos para registrar al usuario.
+                    </p>
+                </div>
+            </div>
+
+            {% for mensaje in app.flashes('danger') %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    {{ mensaje }}
+                </div>
+            {% endfor %}
+
+            <form method="post"
+                  action="{{ path('app_usuarios_nuevo') }}">
+
+                <input
+                    type="hidden"
+                    name="_token"
+                    value="{{ csrf_token('crear_usuario') }}"
+                >
+
+                <div class="mb-4">
+                    <label for="email" class="form-label fw-semibold">
+                        Correo electrónico
+                    </label>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-envelope"></i>
+                        </span>
+
+                        <input
+                            type="email"
+                            class="form-control"
+                            id="email"
+                            name="email"
+                            placeholder="usuario@sterenfix.com"
+                            autocomplete="off"
+                            maxlength="180"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-text">
+                        Este correo se utilizará para iniciar sesión.
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label for="password" class="form-label fw-semibold">
+                            Contraseña
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="password"
+                                name="password"
+                                placeholder="Mínimo 12 caracteres"
+                                autocomplete="new-password"
+                                minlength="12"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <label for="confirmar_password"
+                               class="form-label fw-semibold">
+                            Confirmar contraseña
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-shield-lock"></i>
+                            </span>
+
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="confirmar_password"
+                                name="confirmar_password"
+                                placeholder="Repetí la contraseña"
+                                autocomplete="new-password"
+                                minlength="12"
+                                required
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="rol" class="form-label fw-semibold">
+                        Rol del usuario
+                    </label>
+
+                    <select
+                        class="form-select"
+                        id="rol"
+                        name="rol"
+                        required
+                    >
+                        <option value="ROLE_USER">
+                            Usuario - Solo consulta
+                        </option>
+
+                        <option value="ROLE_ADMIN">
+                            Administrador - Acceso completo
+                        </option>
+                    </select>
+
+                    <div class="form-text">
+                        Los administradores pueden gestionar la información
+                        y las cuentas del sistema.
+                    </div>
+                </div>
+
+                <div class="alert alert-primary border-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    La contraseña se almacenará mediante un hash seguro.
+                    No podrá consultarse posteriormente en texto plano.
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{{ path('app_usuarios') }}"
+                       class="btn btn-outline-secondary px-4">
+                        Cancelar
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-primary px-4">
+                        <i class="bi bi-person-check me-2"></i>
+                        Crear usuario
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

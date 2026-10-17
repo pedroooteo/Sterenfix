@@ -1,0 +1,420 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Registros - Sterenfix{% endblock %}
+
+{% block body %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="page-title">Registros de empleados</h1>
+        <p class="subtitle">Administrá reconocimientos y llamadas de atención.</p>
+    </div>
+
+    {% if is_granted('ROLE_ADMIN') %}
+
+    <button type="button" class="btn btn-primary" id="btnNuevoRegistro">
+        <i class="bi bi-plus-circle"></i>
+        Nuevo registro
+    </button>
+
+    {% endif %}
+</div>
+
+<div id="alertaPagina" class="alert d-none" role="alert"></div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="section-card">
+            <div class="text-muted small">Total de registros</div>
+            <div class="fs-3 fw-bold">{{ registros|length }}</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="section-card">
+            <div class="text-muted small">Reconocimientos positivos</div>
+            <div class="fs-3 fw-bold text-success">
+                {% set positivos = registros|filter(r => r.tipo == 'positivo') %}
+                {{ positivos|length }}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="section-card">
+            <div class="text-muted small">Registros negativos</div>
+            <div class="fs-3 fw-bold text-danger">
+                {% set negativos = registros|filter(r => r.tipo == 'negativo') %}
+                {{ negativos|length }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section-card">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <h5 class="fw-bold mb-0">Historial laboral</h5>
+
+        <div class="d-flex flex-wrap gap-2">
+            <input type="search"
+                   id="buscarRegistro"
+                   class="form-control"
+                   placeholder="Buscar empleado o descripción..."
+                   aria-label="Buscar registros"
+                   style="min-width:250px;">
+
+            <select id="filtroTipo" class="form-select" aria-label="Filtrar por tipo">
+                <option value="">Todos los tipos</option>
+                <option value="positivo">Positivos</option>
+                <option value="negativo">Negativos</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle" id="tablaRegistros">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Empleado</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    {% if is_granted('ROLE_ADMIN') %}<th>Acciones</th>{% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for registro in registros %}
+                    <tr data-tipo="{{ registro.tipo }}">
+                        <td>{{ registro.id }}</td>
+
+                        <td class="fw-medium">
+                            {{ registro.empleado
+                                ? registro.empleado.nombres ~ ' ' ~ registro.empleado.apellidos
+                                : 'Sin empleado' }}
+                        </td>
+
+                        <td>
+                            {% if registro.tipo == 'positivo' %}
+                                <span class="badge text-bg-success">Positivo</span>
+                            {% else %}
+                                <span class="badge text-bg-danger">Negativo</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="descripcion-registro">
+                            {{ registro.descripcion }}
+                        </td>
+
+                        <td>
+                            {{ registro.fecha ? registro.fecha|date('d/m/Y') : '—' }}
+                        </td>
+
+                        {% if is_granted('ROLE_ADMIN') %}
+
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary btn-editar"
+                                        data-id="{{ registro.id }}"
+                                        data-empleado="{{ registro.empleado ? registro.empleado.id : '' }}"
+                                        data-tipo="{{ registro.tipo }}"
+                                        data-descripcion="{{ registro.descripcion }}"
+                                        data-fecha="{{ registro.fecha ? registro.fecha|date('Y-m-d') : '' }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                    Editar
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-eliminar"
+                                        data-id="{{ registro.id }}"
+                                        data-empleado="{{ registro.empleado ? registro.empleado.nombres ~ ' ' ~ registro.empleado.apellidos : 'Sin empleado' }}">
+                                    <i class="bi bi-trash"></i>
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+
+                        {% endif %}
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="{{ is_granted('ROLE_ADMIN') ? 6 : 5 }}" class="text-center text-muted py-4">
+                            No hay registros disponibles.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# MODAL CREAR Y EDITAR #}
+
+<div class="modal fade" id="modalRegistro" tabindex="-1"
+     aria-labelledby="tituloModalRegistro" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloModalRegistro">Nuevo registro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <form id="formRegistro">
+                <div class="modal-body">
+                    <div id="mensajeRegistro" class="alert d-none" role="alert"></div>
+
+                    <input type="hidden" id="registroId">
+
+                    <div class="mb-3">
+                        <label for="empleadoId" class="form-label">Empleado</label>
+                        <select id="empleadoId" class="form-select" required>
+                            <option value="">Seleccioná un empleado</option>
+                            {% for empleado in empleados %}
+                                <option value="{{ empleado.id }}">
+                                    {{ empleado.nombres }} {{ empleado.apellidos }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tipoRegistro" class="form-label">Tipo de registro</label>
+                        <select id="tipoRegistro" class="form-select" required>
+                            <option value="positivo">Positivo - Reconocimiento</option>
+                            <option value="negativo">Negativo - Llamada de atención</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descripcionRegistro" class="form-label">Descripción</label>
+                        <textarea id="descripcionRegistro" class="form-control"
+                                  rows="4" maxlength="5000" required
+                                  placeholder="Describí el motivo del registro..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="fechaRegistro" class="form-label">Fecha</label>
+                        <input type="date" id="fechaRegistro" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">Cancelar</button>
+
+                    <button type="submit" class="btn btn-primary" id="btnGuardarRegistro">
+                        Guardar registro
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{# MODAL ELIMINAR #}
+
+<div class="modal fade" id="modalEliminarRegistro" tabindex="-1"
+     aria-labelledby="tituloEliminarRegistro" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloEliminarRegistro">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="mensajeEliminar" class="alert d-none" role="alert"></div>
+                <p>¿Deseás eliminar este registro laboral?</p>
+                <p id="empleadoEliminar" class="fw-bold"></p>
+                <p class="text-danger mb-0">Esta acción no se puede deshacer.</p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">Cancelar</button>
+
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
+                    Sí, eliminar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalRegistro = new bootstrap.Modal(document.getElementById('modalRegistro'));
+    const modalEliminar = new bootstrap.Modal(document.getElementById('modalEliminarRegistro'));
+
+    const formulario = document.getElementById('formRegistro');
+    const registroId = document.getElementById('registroId');
+    const empleadoId = document.getElementById('empleadoId');
+    const tipoRegistro = document.getElementById('tipoRegistro');
+    const descripcion = document.getElementById('descripcionRegistro');
+    const fecha = document.getElementById('fechaRegistro');
+    const mensaje = document.getElementById('mensajeRegistro');
+    const mensajeEliminar = document.getElementById('mensajeEliminar');
+    const botonGuardar = document.getElementById('btnGuardarRegistro');
+    const botonEliminar = document.getElementById('btnConfirmarEliminar');
+
+    let idAEliminar = null;
+
+    function mostrarMensaje(elemento, texto, tipo) {
+        elemento.className = 'alert alert-' + tipo;
+        elemento.textContent = texto;
+    }
+
+    function limpiarMensaje(elemento) {
+        elemento.className = 'alert d-none';
+        elemento.textContent = '';
+    }
+
+    // BUSCADOR Y FILTRO
+    function filtrarRegistros() {
+        const busqueda = document.getElementById('buscarRegistro').value.toLowerCase().trim();
+        const tipo = document.getElementById('filtroTipo').value;
+
+        document.querySelectorAll('#tablaRegistros tbody tr').forEach(function (fila) {
+            const texto = fila.textContent.toLowerCase();
+            const coincideTexto = texto.includes(busqueda);
+            const coincideTipo = !tipo || fila.dataset.tipo === tipo;
+
+            fila.style.display = coincideTexto && coincideTipo ? '' : 'none';
+        });
+    }
+
+    document.getElementById('buscarRegistro').addEventListener('input', filtrarRegistros);
+    document.getElementById('filtroTipo').addEventListener('change', filtrarRegistros);
+
+    // NUEVO REGISTRO
+    document.getElementById('btnNuevoRegistro')?.addEventListener('click', function () {
+        formulario.reset();
+        registroId.value = '';
+        tituloModalRegistro.textContent = 'Nuevo registro';
+        botonGuardar.textContent = 'Guardar registro';
+        limpiarMensaje(mensaje);
+        modalRegistro.show();
+    });
+
+    const tituloModalRegistro = document.getElementById('tituloModalRegistro');
+
+    // EDITAR
+    document.querySelectorAll('.btn-editar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            registroId.value = this.dataset.id;
+            empleadoId.value = this.dataset.empleado;
+            tipoRegistro.value = this.dataset.tipo;
+            descripcion.value = this.dataset.descripcion;
+            fecha.value = this.dataset.fecha;
+
+            tituloModalRegistro.textContent = 'Editar registro';
+            botonGuardar.textContent = 'Guardar cambios';
+            limpiarMensaje(mensaje);
+            modalRegistro.show();
+        });
+    });
+
+    // GUARDAR O ACTUALIZAR
+    formulario.addEventListener('submit', async function (evento) {
+        evento.preventDefault();
+
+        const id = registroId.value;
+
+        const datos = {
+            empleadoId: Number(empleadoId.value),
+            tipo: tipoRegistro.value,
+            descripcion: descripcion.value.trim(),
+            fecha: fecha.value
+        };
+
+        if (!datos.empleadoId || !datos.descripcion || !datos.fecha) {
+            mostrarMensaje(mensaje, 'Completá todos los campos obligatorios.', 'danger');
+            return;
+        }
+
+        botonGuardar.disabled = true;
+        botonGuardar.textContent = 'Guardando...';
+
+        try {
+            const respuesta = await fetch(
+                id ? '/api/registros/' + id : '/api/registros',
+                {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                }
+            );
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(resultado.error || 'No se pudo guardar el registro.');
+            }
+
+            mostrarMensaje(mensaje, resultado.mensaje || 'Registro guardado.', 'success');
+            setTimeout(() => window.location.reload(), 700);
+
+        } catch (error) {
+            mostrarMensaje(mensaje, error.message, 'danger');
+        } finally {
+            botonGuardar.disabled = false;
+            botonGuardar.textContent = id ? 'Guardar cambios' : 'Guardar registro';
+        }
+    });
+
+    // ABRIR CONFIRMACIÓN
+    document.querySelectorAll('.btn-eliminar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            idAEliminar = Number(this.dataset.id);
+            document.getElementById('empleadoEliminar').textContent = this.dataset.empleado;
+
+            limpiarMensaje(mensajeEliminar);
+            modalEliminar.show();
+        });
+    });
+
+    // ELIMINAR
+    botonEliminar.addEventListener('click', async function () {
+        if (!idAEliminar) return;
+
+        botonEliminar.disabled = true;
+        botonEliminar.textContent = 'Eliminando...';
+
+        try {
+            const respuesta = await fetch('/api/registros/' + idAEliminar, {
+                method: 'DELETE'
+            });
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(resultado.error || 'No se pudo eliminar el registro.');
+            }
+
+            mostrarMensaje(mensajeEliminar, resultado.mensaje || 'Registro eliminado.', 'success');
+            setTimeout(() => window.location.reload(), 700);
+
+        } catch (error) {
+            mostrarMensaje(mensajeEliminar, error.message, 'danger');
+        } finally {
+            botonEliminar.disabled = false;
+            botonEliminar.textContent = 'Sí, eliminar';
+        }
+    });
+});
+</script>
+{% endblock %}

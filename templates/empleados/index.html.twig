@@ -1,0 +1,768 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Empleados - Sterenfix{% endblock %}
+
+{% block body %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="page-title">Gestión de empleados</h1>
+        <p class="subtitle">
+            Administración del personal registrado en Sterenfix.
+        </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+        <span class="badge text-bg-primary px-3 py-2">
+            {{ empleados|length }} empleados
+        </span>
+
+
+        {% if is_granted('ROLE_ADMIN') %}
+            <button type="button"
+                    class="btn btn-primary"
+                    id="btnNuevoEmpleado">
+                <i class="bi bi-person-plus"></i>
+                Agregar empleado
+            </button>
+        {% endif %}
+
+    </div>
+</div>
+
+<div id="alertaPagina" class="alert d-none" role="alert"></div>
+
+<div class="section-card">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <h5 class="fw-bold mb-0">Listado de empleados</h5>
+
+        <input type="search"
+               id="buscarEmpleado"
+               class="form-control"
+               placeholder="Buscar empleado..."
+               aria-label="Buscar empleado"
+               style="max-width:280px;">
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle" id="tablaEmpleados">
+            <thead>
+                <tr>
+                    <th>Fotografía</th>
+                    <th>Nombre completo</th>
+                    <th>Salario mensual</th>
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for empleado in empleados %}
+                    <tr>
+                        <td>
+                            {% if empleado.fotografia %}
+                                <img src="{{ empleado.fotografia }}"
+                                     alt="Fotografía de {{ empleado.nombres }}"
+                                     width="50"
+                                     height="50"
+                                     style="object-fit:cover;border-radius:50%;">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center bg-light rounded-circle"
+                                     style="width:50px;height:50px;">
+                                    <i class="bi bi-person text-secondary"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td class="fw-medium">
+                            {{ empleado.nombres }} {{ empleado.apellidos }}
+                        </td>
+
+                        <td>
+                            Q {{ empleado.salario|number_format(2, '.', ',') }}
+                        </td>
+
+                        {% if is_granted('ROLE_ADMIN') %}
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary btn-editar"
+                                        data-id="{{ empleado.id }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                    Editar
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-eliminar"
+                                        data-id="{{ empleado.id }}"
+                                        data-nombre="{{ empleado.nombres }} {{ empleado.apellidos }}">
+                                    <i class="bi bi-trash"></i>
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="{{ is_granted('ROLE_ADMIN') ? 4 : 3 }}" class="text-center text-muted py-4">
+                            No hay empleados registrados.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# MODAL PARA AGREGAR Y EDITAR EMPLEADOS #}
+
+<div class="modal fade"
+     id="modalEmpleado"
+     tabindex="-1"
+     aria-labelledby="tituloModalEmpleado"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloModalEmpleado">
+                    Agregar empleado
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <form id="formEmpleado">
+
+                <div class="modal-body">
+
+                    <div id="mensajeEmpleado"
+                         class="alert d-none"
+                         role="alert"></div>
+
+                    <input type="hidden" id="empleadoId">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">Nombres</label>
+                            <input type="text"
+                                   name="nombres"
+                                   class="form-control"
+                                   maxlength="100"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Apellidos</label>
+                            <input type="text"
+                                   name="apellidos"
+                                   class="form-control"
+                                   maxlength="100"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha de nacimiento</label>
+                            <input type="date"
+                                   name="fechaNacimiento"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Salario mensual (Q)</label>
+                            <input type="number"
+                                   name="salario"
+                                   class="form-control"
+                                   min="0"
+                                   max="9999999999.99"
+                                   step="0.01"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Puesto</label>
+                            <select name="puestoId"
+                                    id="selectPuesto"
+                                    class="form-select"
+                                    required>
+                                <option value="">Seleccionar puesto</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Tienda</label>
+                            <select name="tiendaId"
+                                    id="selectTienda"
+                                    class="form-select"
+                                    required>
+                                <option value="">Seleccionar tienda</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="fotografiaEmpleado" class="form-label">
+                                Fotografía del empleado (opcional)
+                            </label>
+
+                            <input type="file"
+                                   name="fotografia"
+                                   id="fotografiaEmpleado"
+                                   class="form-control"
+                                   accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+
+                            <div class="form-text">
+                                Formatos permitidos: JPG, PNG o WebP. Máximo 5 MB.
+                                Al editar, dejá el campo vacío para conservar la fotografía actual.
+                            </div>
+
+                            <div id="contenedorVistaPrevia"
+                                 class="mt-3 d-none">
+
+                                <img id="vistaPreviaFotografia"
+                                     alt="Vista previa de la fotografía"
+                                     width="110"
+                                     height="110"
+                                     style="object-fit:cover;border-radius:12px;border:1px solid #e2e8f0;">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit"
+                            id="btnGuardarEmpleado"
+                            class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i>
+                        Guardar empleado
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{# MODAL PARA CONFIRMAR ELIMINACIÓN #}
+
+<div class="modal fade"
+     id="modalEliminarEmpleado"
+     tabindex="-1"
+     aria-labelledby="tituloEliminarEmpleado"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloEliminarEmpleado">
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                    Confirmar eliminación
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div id="mensajeEliminar"
+                     class="alert d-none"
+                     role="alert"></div>
+
+                <p>¿Estás seguro de que querés eliminar al empleado?</p>
+
+                <p class="fw-bold" id="nombreEmpleadoEliminar"></p>
+
+                <p class="text-danger mb-0">
+                    Esta acción es permanente y no se puede deshacer.
+                </p>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        class="btn btn-danger"
+                        id="btnConfirmarEliminar">
+                    <i class="bi bi-trash"></i>
+                    Sí, eliminar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+
+    const formulario = document.getElementById('formEmpleado');
+    const mensaje = document.getElementById('mensajeEmpleado');
+    const botonGuardar = document.getElementById('btnGuardarEmpleado');
+    const campoId = document.getElementById('empleadoId');
+    const tituloModal = document.getElementById('tituloModalEmpleado');
+
+    const modalEmpleado = new bootstrap.Modal(
+        document.getElementById('modalEmpleado')
+    );
+
+    const modalEliminar = new bootstrap.Modal(
+        document.getElementById('modalEliminarEmpleado')
+    );
+
+    const mensajeEliminar = document.getElementById('mensajeEliminar');
+    const nombreEmpleadoEliminar = document.getElementById('nombreEmpleadoEliminar');
+    const botonConfirmarEliminar = document.getElementById('btnConfirmarEliminar');
+    const alertaPagina = document.getElementById('alertaPagina');
+
+    const inputFotografia = document.getElementById('fotografiaEmpleado');
+    const contenedorVistaPrevia = document.getElementById('contenedorVistaPrevia');
+    const vistaPrevia = document.getElementById('vistaPreviaFotografia');
+
+    const buscador = document.getElementById('buscarEmpleado');
+    const filas = document.querySelectorAll('#tablaEmpleados tbody tr');
+
+    let empleados = [];
+    let opcionesCargadas = false;
+    let empleadoAEliminar = null;
+    let urlVistaPrevia = null;
+
+    // BUSCADOR
+    buscador.addEventListener('input', function () {
+        const busqueda = this.value.toLowerCase().trim();
+
+        filas.forEach(function (fila) {
+            const nombre = fila.cells[1]?.textContent.toLowerCase() || '';
+            fila.style.display = nombre.includes(busqueda) ? '' : 'none';
+        });
+    });
+
+    // MENSAJES
+    function mostrarMensaje(elemento, texto, tipo) {
+        elemento.className = 'alert alert-' + tipo;
+        elemento.textContent = texto;
+    }
+
+    function limpiarMensaje(elemento) {
+        elemento.className = 'alert d-none';
+        elemento.textContent = '';
+    }
+
+    // VISTA PREVIA DE FOTOGRAFÍA
+    function limpiarVistaPrevia() {
+        if (urlVistaPrevia) {
+            URL.revokeObjectURL(urlVistaPrevia);
+            urlVistaPrevia = null;
+        }
+
+        vistaPrevia.removeAttribute('src');
+        contenedorVistaPrevia.classList.add('d-none');
+    }
+
+    function mostrarFotografiaActual(ruta) {
+        limpiarVistaPrevia();
+
+        if (ruta) {
+            vistaPrevia.src = ruta;
+            contenedorVistaPrevia.classList.remove('d-none');
+        }
+    }
+
+    inputFotografia.addEventListener('change', function () {
+        const archivo = this.files[0];
+
+        if (!archivo) {
+            limpiarVistaPrevia();
+            return;
+        }
+
+        const tiposPermitidos = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+
+        if (!tiposPermitidos.includes(archivo.type)) {
+            mostrarMensaje(
+                mensaje,
+                'Seleccioná una imagen JPG, PNG o WebP.',
+                'danger'
+            );
+
+            this.value = '';
+            limpiarVistaPrevia();
+            return;
+        }
+
+        if (archivo.size > 5 * 1024 * 1024) {
+            mostrarMensaje(
+                mensaje,
+                'La fotografía no puede superar 5 MB.',
+                'danger'
+            );
+
+            this.value = '';
+            limpiarVistaPrevia();
+            return;
+        }
+
+        limpiarMensaje(mensaje);
+        limpiarVistaPrevia();
+
+        urlVistaPrevia = URL.createObjectURL(archivo);
+        vistaPrevia.src = urlVistaPrevia;
+        contenedorVistaPrevia.classList.remove('d-none');
+    });
+
+    // CONSULTAR API
+    async function obtenerJSON(url) {
+        const respuesta = await fetch(url);
+
+        if (!respuesta.ok) {
+            throw new Error('Error al consultar ' + url);
+        }
+
+        return await respuesta.json();
+    }
+
+    // CARGAR PUESTOS Y TIENDAS
+    async function cargarOpciones(url, selectId) {
+        const datos = await obtenerJSON(url);
+
+        if (!Array.isArray(datos)) {
+            throw new Error('La API no devolvió una lista válida: ' + url);
+        }
+
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Seleccionar opción</option>';
+
+        datos.forEach(function (item) {
+            const opcion = document.createElement('option');
+            opcion.value = item.id;
+            opcion.textContent = item.nombre;
+            select.appendChild(opcion);
+        });
+    }
+
+    async function inicializarDatos() {
+        const resultados = await Promise.all([
+            obtenerJSON('/api/empleados'),
+            cargarOpciones('/api/puestos', 'selectPuesto'),
+            cargarOpciones('/api/tiendas', 'selectTienda')
+        ]);
+
+        empleados = resultados[0];
+
+        if (!Array.isArray(empleados)) {
+            throw new Error('La API de empleados no devolvió una lista válida.');
+        }
+
+        opcionesCargadas = true;
+    }
+
+    // AGREGAR EMPLEADO
+    document.getElementById('btnNuevoEmpleado')?.addEventListener('click', function () {
+        formulario.reset();
+        campoId.value = '';
+        tituloModal.textContent = 'Agregar nuevo empleado';
+        botonGuardar.textContent = 'Guardar empleado';
+        botonGuardar.disabled = !opcionesCargadas;
+
+        limpiarMensaje(mensaje);
+        limpiarVistaPrevia();
+
+        if (!opcionesCargadas) {
+            mostrarMensaje(
+                mensaje,
+                'No se pudieron cargar los datos. Actualizá la página.',
+                'danger'
+            );
+        }
+
+        modalEmpleado.show();
+    });
+
+    // EDITAR EMPLEADO
+    document.querySelectorAll('.btn-editar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+
+            const id = Number(this.dataset.id);
+
+            const empleado = empleados.find(function (item) {
+                return Number(item.id) === id;
+            });
+
+            if (!empleado) {
+                alert('No se encontró el empleado. Actualizá la página.');
+                return;
+            }
+
+            formulario.reset();
+            limpiarMensaje(mensaje);
+
+            campoId.value = empleado.id;
+            tituloModal.textContent = 'Editar empleado';
+            botonGuardar.textContent = 'Guardar cambios';
+            botonGuardar.disabled = !opcionesCargadas;
+
+            formulario.elements['nombres'].value = empleado.nombres;
+            formulario.elements['apellidos'].value = empleado.apellidos;
+            formulario.elements['fechaNacimiento'].value = empleado.fechaNacimiento;
+            formulario.elements['salario'].value = empleado.salario;
+            formulario.elements['puestoId'].value = String(empleado.puestoId);
+            formulario.elements['tiendaId'].value = String(empleado.tiendaId);
+
+            mostrarFotografiaActual(empleado.fotografia);
+
+            modalEmpleado.show();
+        });
+    });
+
+    // SUBIR FOTOGRAFÍA
+    async function subirFotografia(id, archivo) {
+        const datosImagen = new FormData();
+        datosImagen.append('fotografia', archivo);
+
+        const respuesta = await fetch(
+            '/api/empleados/' + id + '/fotografia',
+            {
+                method: 'POST',
+                body: datosImagen
+            }
+        );
+
+        let resultado;
+
+        try {
+            resultado = await respuesta.json();
+        } catch (error) {
+            throw new Error('La API devolvió una respuesta inválida al subir la fotografía.');
+        }
+
+        if (!respuesta.ok) {
+            throw new Error(
+                resultado.error || 'No se pudo subir la fotografía.'
+            );
+        }
+
+        return resultado;
+    }
+
+    // GUARDAR EMPLEADO
+    formulario.addEventListener('submit', async function (evento) {
+        evento.preventDefault();
+
+        const datosFormulario = new FormData(formulario);
+        const id = campoId.value;
+        const archivo = inputFotografia.files[0];
+
+        const empleado = {
+            nombres: datosFormulario.get('nombres'),
+            apellidos: datosFormulario.get('apellidos'),
+            fechaNacimiento: datosFormulario.get('fechaNacimiento'),
+            salario: datosFormulario.get('salario'),
+            puestoId: Number(datosFormulario.get('puestoId')),
+            tiendaId: Number(datosFormulario.get('tiendaId'))
+        };
+
+        const url = id ? '/api/empleados/' + id : '/api/empleados';
+        const metodo = id ? 'PUT' : 'POST';
+
+        botonGuardar.disabled = true;
+        botonGuardar.textContent = 'Guardando...';
+        limpiarMensaje(mensaje);
+
+        let idGuardado = id ? Number(id) : null;
+
+        try {
+            // PRIMERO: GUARDAR DATOS DEL EMPLEADO
+            const respuesta = await fetch(url, {
+                method: metodo,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(empleado)
+            });
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(
+                    resultado.error || 'No se pudo guardar el empleado.'
+                );
+            }
+
+            // SI ES NUEVO, OBTENER EL ID GENERADO
+            if (!idGuardado) {
+                idGuardado = Number(resultado.empleado?.id);
+
+                if (!idGuardado) {
+                    throw new Error(
+                        'El empleado fue creado, pero la API no devolvió su ID. Revisá el listado antes de intentar nuevamente.'
+                    );
+                }
+            }
+
+            // SEGUNDO: SUBIR FOTOGRAFÍA SI SE SELECCIONÓ UNA
+            if (archivo) {
+                try {
+                    await subirFotografia(idGuardado, archivo);
+                } catch (error) {
+                    mostrarMensaje(
+                        mensaje,
+                        'Los datos del empleado se guardaron, pero la fotografía no pudo subirse: ' +
+                        error.message +
+                        ' Podés volver a editarlo para intentar subir la imagen.',
+                        'warning'
+                    );
+
+                    botonGuardar.disabled = false;
+                    botonGuardar.textContent = id
+                        ? 'Guardar cambios'
+                        : 'Guardar empleado';
+
+                    // Evitar crear duplicados al reintentar
+                    campoId.value = String(idGuardado);
+                    tituloModal.textContent = 'Editar empleado';
+
+                    return;
+                }
+            }
+
+            mostrarMensaje(
+                mensaje,
+                id ? 'Empleado actualizado correctamente.' : 'Empleado registrado correctamente.',
+                'success'
+            );
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 800);
+
+        } catch (error) {
+            mostrarMensaje(mensaje, error.message, 'danger');
+
+            botonGuardar.disabled = false;
+            botonGuardar.textContent = id
+                ? 'Guardar cambios'
+                : 'Guardar empleado';
+        }
+    });
+
+    // ABRIR CONFIRMACIÓN DE ELIMINACIÓN
+    document.querySelectorAll('.btn-eliminar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+
+            empleadoAEliminar = Number(this.dataset.id);
+
+            nombreEmpleadoEliminar.textContent = this.dataset.nombre;
+
+            limpiarMensaje(mensajeEliminar);
+            botonConfirmarEliminar.disabled = false;
+            botonConfirmarEliminar.innerHTML =
+                '<i class="bi bi-trash"></i> Sí, eliminar';
+
+            modalEliminar.show();
+        });
+    });
+
+    // ELIMINAR EMPLEADO
+    botonConfirmarEliminar.addEventListener('click', async function () {
+
+        if (empleadoAEliminar === null) {
+            return;
+        }
+
+        botonConfirmarEliminar.disabled = true;
+        botonConfirmarEliminar.textContent = 'Eliminando...';
+        limpiarMensaje(mensajeEliminar);
+
+        try {
+            const respuesta = await fetch(
+                '/api/empleados/' + empleadoAEliminar,
+                {
+                    method: 'DELETE'
+                }
+            );
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(
+                    resultado.error || 'No se pudo eliminar el empleado.'
+                );
+            }
+
+            mostrarMensaje(
+                mensajeEliminar,
+                'Empleado eliminado correctamente.',
+                'success'
+            );
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 800);
+
+        } catch (error) {
+            mostrarMensaje(
+                mensajeEliminar,
+                error.message,
+                'danger'
+            );
+
+            botonConfirmarEliminar.disabled = false;
+            botonConfirmarEliminar.innerHTML =
+                '<i class="bi bi-trash"></i> Sí, eliminar';
+        }
+    });
+
+    // INICIALIZAR DATOS
+    try {
+        await inicializarDatos();
+    } catch (error) {
+        console.error(error);
+        opcionesCargadas = false;
+
+        mostrarMensaje(
+            alertaPagina,
+            'No se pudieron cargar todos los datos de empleados, puestos o tiendas. Actualizá la página.',
+            'danger'
+        );
+
+        document.querySelectorAll('.btn-editar').forEach(function (boton) {
+            boton.disabled = true;
+        });
+    }
+
+});
+</script>
+
+{% endblock %}

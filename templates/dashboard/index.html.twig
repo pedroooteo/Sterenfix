@@ -1,0 +1,95 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard - Sterenfix{% endblock %}
+
+{% block body %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">Panel de control</h1>
+        <p class="subtitle">
+            Bienvenido al sistema administrativo de Sterenfix.
+        </p>
+    </div>
+
+    <span class="badge text-bg-primary px-3 py-2">
+        <i class="bi bi-circle-fill me-1"></i>
+        Sistema activo
+    </span>
+</div>
+
+<div class="row g-4">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <span class="stat-label">Total empleados</span>
+                <div class="stat-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+
+            <div class="stat-number">{{ totalEmpleados }}</div>
+            <small class="text-muted">Empleados registrados</small>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <span class="stat-label">Tiendas</span>
+                <div class="stat-icon">
+                    <i class="bi bi-shop"></i>
+                </div>
+            </div>
+
+            <div class="stat-number">{{ totalTiendas }}</div>
+            <small class="text-muted">Sucursales registradas</small>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <span class="stat-label">Puestos</span>
+                <div class="stat-icon">
+                    <i class="bi bi-briefcase"></i>
+                </div>
+            </div>
+
+            <div class="stat-number">{{ totalPuestos }}</div>
+            <small class="text-muted">Puestos registrados</small>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <span class="stat-label">Nómina mensual</span>
+                <div class="stat-icon">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+            </div>
+
+            <div class="stat-number">
+                Q {{ nominaMensual|number_format(2, '.', ',') }}
+            </div>
+
+            <small class="text-muted">Total de salarios</small>
+        </div>
+    </div>
+
+</div>
+
+<section class="section-card mt-4">
+    <h5 class="fw-bold">Bienvenido a Sterenfix</h5>
+
+    <p class="text-muted mb-0">
+        Desde este panel podrás administrar empleados,
+        consultar tiendas y puestos, gestionar registros
+        y visualizar reportes de la organización.
+    </p>
+</section>
+
+{% endblock %}

@@ -1,0 +1,399 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Iniciar sesión | Sterenfix</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text: #17243c;
+            --muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f7fc;
+            color: var(--text);
+        }
+
+        .login-layout {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .login-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            background: #ffffff;
+        }
+
+        .login-content {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 58px;
+            color: var(--primary);
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .brand-icon {
+            width: 43px;
+            height: 43px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+            font-size: 23px;
+        }
+
+        .login-title {
+            font-size: 32px;
+            font-weight: 750;
+            letter-spacing: -0.8px;
+            margin-bottom: 10px;
+        }
+
+        .login-subtitle {
+            color: var(--muted);
+            margin-bottom: 35px;
+            line-height: 1.6;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 9px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group-text {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            color: #94a3b8;
+            padding: 13px 15px;
+        }
+
+        .form-control {
+            padding: 13px;
+            border-color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            border-color: #93b4ff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 9px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+
+        .login-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .login-footer {
+            margin-top: 45px;
+            color: #94a3b8;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .visual-panel {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            background: linear-gradient(
+                145deg,
+                #2563eb 0%,
+                #1d4ed8 45%,
+                #102c81 100%
+            );
+            color: white;
+        }
+
+        .visual-panel::before,
+        .visual-panel::after {
+            content: "";
+            position: absolute;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+        }
+
+        .visual-panel::before {
+            width: 650px;
+            height: 650px;
+            top: -250px;
+            right: -270px;
+        }
+
+        .visual-panel::after {
+            width: 500px;
+            height: 500px;
+            bottom: -270px;
+            left: -230px;
+        }
+
+        .visual-content {
+            position: relative;
+            z-index: 1;
+            max-width: 490px;
+            text-align: center;
+        }
+
+        .visual-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 125px;
+            height: 125px;
+            border-radius: 30px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 58px;
+            margin-bottom: 35px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+
+        .visual-title {
+            font-size: 35px;
+            font-weight: 750;
+            line-height: 1.25;
+            margin-bottom: 20px;
+        }
+
+        .visual-description {
+            color: rgba(255,255,255,0.78);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .feature-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 35px;
+        }
+
+        .feature-pill {
+            padding: 9px 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.16);
+            border-radius: 30px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .login-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .visual-panel {
+                display: none;
+            }
+
+            .login-panel {
+                min-height: 100vh;
+            }
+
+            .brand {
+                margin-bottom: 40px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="login-layout">
+
+        <section class="login-panel">
+            <div class="login-content">
+
+                <div class="brand">
+                    <span class="brand-icon">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                    </span>
+                    STERENFIX
+                </div>
+
+                <h1 class="login-title">Bienvenido de nuevo</h1>
+
+                <p class="login-subtitle">
+                    Ingresá tus credenciales para acceder al
+                    sistema administrativo de Sterenfix.
+                </p>
+
+
+                    {% if error %}
+                        <div class="alert alert-danger d-flex align-items-center gap-2"
+                            role="alert">
+                            <i class="bi bi-exclamation-circle"></i>
+                            <span>Usuario o contraseña incorrectos.</span>
+                        </div>
+                    {% endif %}
+
+
+                {% if app.user %}
+                    <div class="alert alert-info">
+                        Ya tenés una sesión iniciada como
+                        <strong>{{ app.user.userIdentifier }}</strong>.
+                        <a href="{{ path('app_dashboard') }}">
+                            Ir al dashboard
+                        </a>
+                    </div>
+                {% endif %}
+
+                <form method="post" action="{{ path('app_login') }}">
+
+                    <label for="username" class="form-label">
+                        Correo electrónico
+                    </label>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-envelope"></i>
+                        </span>
+
+                        <input
+                            type="email"
+                            id="username"
+                            name="_username"
+                            class="form-control"
+                            placeholder="correo@ejemplo.com"
+                            value="{{ last_username }}"
+                            autocomplete="username"
+                            required
+                            autofocus
+                        >
+                    </div>
+
+                    <label for="password" class="form-label">
+                        Contraseña
+                    </label>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-lock"></i>
+                        </span>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="_password"
+                            class="form-control"
+                            placeholder="Ingresá tu contraseña"
+                            autocomplete="current-password"
+                            required
+                        >
+                    </div>
+
+                    <input
+                        type="hidden"
+                        name="_csrf_token"
+                        value="{{ csrf_token('authenticate') }}"
+                    >
+
+                    <button type="submit" class="login-button">
+                        Iniciar sesión
+                        <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+
+                </form>
+
+                <div class="login-footer">
+                    &copy; {{ "now"|date("Y") }} Sterenfix.
+                    Sistema de gestión administrativa.
+                </div>
+
+            </div>
+        </section>
+
+        <section class="visual-panel">
+            <div class="visual-content">
+
+                <div class="visual-icon">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+
+                <h2 class="visual-title">
+                    Gestioná tu organización
+                    de forma inteligente.
+                </h2>
+
+                <p class="visual-description">
+                    Centralizá la administración de empleados,
+                    tiendas, puestos y registros en una plataforma
+                    segura, moderna y eficiente.
+                </p>
+
+                <div class="feature-row">
+                    <span class="feature-pill">
+                        <i class="bi bi-people me-1"></i>
+                        Empleados
+                    </span>
+
+                    <span class="feature-pill">
+                        <i class="bi bi-shop me-1"></i>
+                        Tiendas
+                    </span>
+
+                    <span class="feature-pill">
+                        <i class="bi bi-bar-chart me-1"></i>
+                        Reportes
+                    </span>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+</body>
+</html>

@@ -1,0 +1,442 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Tiendas - Sterenfix{% endblock %}
+
+{% block body %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="page-title">Administración de tiendas</h1>
+        <p class="subtitle">
+            Gestioná las sucursales registradas en Sterenfix.
+        </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+        <span class="badge text-bg-primary px-3 py-2">
+            {{ tiendas|length }} tiendas
+        </span>
+
+        {% if is_granted('ROLE_ADMIN') %}
+
+        <button type="button" class="btn btn-primary" id="btnNuevaTienda">
+            <i class="bi bi-plus-circle"></i>
+            Nueva tienda
+        </button>
+
+        {% endif %}
+    </div>
+</div>
+
+<div id="alertaPagina" class="alert d-none" role="alert"></div>
+
+<div class="section-card">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <h5 class="fw-bold mb-0">Listado de sucursales</h5>
+
+        <input type="search"
+               id="buscarTienda"
+               class="form-control"
+               placeholder="Buscar tienda..."
+               aria-label="Buscar tienda"
+               style="max-width:280px;">
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle" id="tablaTiendas">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre de la tienda</th>
+                    <th>Empleados asignados</th>
+                    {% if is_granted('ROLE_ADMIN') %}<th>Acciones</th>{% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for tienda in tiendas %}
+                    <tr>
+                        <td>{{ tienda.id }}</td>
+
+                        <td class="fw-medium">
+                            <i class="bi bi-shop text-primary me-2"></i>
+                            {{ tienda.nombre }}
+                        </td>
+
+                        <td>
+                            <span class="badge text-bg-light border empleados-tienda"
+                                  data-id="{{ tienda.id }}">
+                                Consultando...
+                            </span>
+                        </td>
+
+                        {% if is_granted('ROLE_ADMIN') %}
+
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary btn-editar"
+                                        data-id="{{ tienda.id }}"
+                                        data-nombre="{{ tienda.nombre }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                    Editar
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-eliminar"
+                                        data-id="{{ tienda.id }}"
+                                        data-nombre="{{ tienda.nombre }}">
+                                    <i class="bi bi-trash"></i>
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+
+                        {% endif %}
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="{{ is_granted('ROLE_ADMIN') ? 4 : 3 }}" class="text-center text-muted py-4">
+                            No hay tiendas registradas.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# MODAL PARA AGREGAR Y EDITAR #}
+
+<div class="modal fade"
+     id="modalTienda"
+     tabindex="-1"
+     aria-labelledby="tituloModalTienda"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloModalTienda">
+                    Nueva tienda
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <form id="formTienda">
+                <div class="modal-body">
+
+                    <div id="mensajeTienda" class="alert d-none" role="alert"></div>
+
+                    <input type="hidden" id="tiendaId">
+
+                    <label for="nombreTienda" class="form-label">
+                        Nombre de la tienda
+                    </label>
+
+                    <input type="text"
+                           id="nombreTienda"
+                           name="nombre"
+                           class="form-control"
+                           maxlength="150"
+                           placeholder="Ej. Steren Zona 15"
+                           required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit"
+                            id="btnGuardarTienda"
+                            class="btn btn-primary">
+                        Guardar tienda
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{# MODAL PARA CONFIRMAR ELIMINACIÓN #}
+
+<div class="modal fade"
+     id="modalEliminarTienda"
+     tabindex="-1"
+     aria-labelledby="tituloEliminarTienda"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloEliminarTienda">
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                    Confirmar eliminación
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="mensajeEliminar" class="alert d-none" role="alert"></div>
+
+                <p>¿Estás seguro de que querés eliminar esta tienda?</p>
+
+                <p id="nombreTiendaEliminar" class="fw-bold"></p>
+
+                <p class="text-danger mb-0">
+                    No se podrá eliminar si todavía tiene empleados asignados.
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        class="btn btn-danger"
+                        id="btnConfirmarEliminar">
+                    <i class="bi bi-trash"></i>
+                    Sí, eliminar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+
+    const modalTienda = new bootstrap.Modal(
+        document.getElementById('modalTienda')
+    );
+
+    const modalEliminar = new bootstrap.Modal(
+        document.getElementById('modalEliminarTienda')
+    );
+
+    const formulario = document.getElementById('formTienda');
+    const campoId = document.getElementById('tiendaId');
+    const campoNombre = document.getElementById('nombreTienda');
+    const tituloModal = document.getElementById('tituloModalTienda');
+    const botonGuardar = document.getElementById('btnGuardarTienda');
+    const botonEliminar = document.getElementById('btnConfirmarEliminar');
+
+    const mensaje = document.getElementById('mensajeTienda');
+    const mensajeEliminar = document.getElementById('mensajeEliminar');
+    const nombreEliminar = document.getElementById('nombreTiendaEliminar');
+    const alertaPagina = document.getElementById('alertaPagina');
+
+    const buscador = document.getElementById('buscarTienda');
+
+    let tiendaAEliminar = null;
+
+    function mostrarMensaje(elemento, texto, tipo) {
+        elemento.className = 'alert alert-' + tipo;
+        elemento.textContent = texto;
+    }
+
+    function limpiarMensaje(elemento) {
+        elemento.className = 'alert d-none';
+        elemento.textContent = '';
+    }
+
+    // BUSCADOR
+    buscador.addEventListener('input', function () {
+        const busqueda = this.value.toLowerCase().trim();
+
+        document.querySelectorAll('#tablaTiendas tbody tr').forEach(function (fila) {
+            const nombre = fila.cells[1]?.textContent.toLowerCase() || '';
+            fila.style.display = nombre.includes(busqueda) ? '' : 'none';
+        });
+    });
+
+    // CONSULTAR EMPLEADOS PARA CADA TIENDA
+    async function cargarCantidadEmpleados() {
+        try {
+            const respuesta = await fetch('/api/empleados');
+
+            if (!respuesta.ok) {
+                throw new Error('No se pudo consultar empleados.');
+            }
+
+            const empleados = await respuesta.json();
+
+            if (!Array.isArray(empleados)) {
+                throw new Error('Respuesta de empleados inválida.');
+            }
+
+            document.querySelectorAll('.empleados-tienda').forEach(function (etiqueta) {
+                const tiendaId = Number(etiqueta.dataset.id);
+
+                const cantidad = empleados.filter(function (empleado) {
+                    return Number(empleado.tiendaId) === tiendaId;
+                }).length;
+
+                etiqueta.textContent = cantidad;
+            });
+
+        } catch (error) {
+            console.error(error);
+
+            document.querySelectorAll('.empleados-tienda').forEach(function (etiqueta) {
+                etiqueta.textContent = 'No disponible';
+            });
+        }
+    }
+
+    // NUEVA TIENDA
+    document.getElementById('btnNuevaTienda')?.addEventListener('click', function () {
+        formulario.reset();
+        campoId.value = '';
+        tituloModal.textContent = 'Nueva tienda';
+        botonGuardar.textContent = 'Guardar tienda';
+
+        limpiarMensaje(mensaje);
+        modalTienda.show();
+    });
+
+    // EDITAR TIENDA
+    document.querySelectorAll('.btn-editar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            campoId.value = this.dataset.id;
+            campoNombre.value = this.dataset.nombre;
+
+            tituloModal.textContent = 'Editar tienda';
+            botonGuardar.textContent = 'Guardar cambios';
+
+            limpiarMensaje(mensaje);
+            modalTienda.show();
+        });
+    });
+
+    // GUARDAR O ACTUALIZAR
+    formulario.addEventListener('submit', async function (evento) {
+        evento.preventDefault();
+
+        const id = campoId.value;
+        const nombre = campoNombre.value.trim();
+
+        if (!nombre) {
+            mostrarMensaje(mensaje, 'El nombre de la tienda es obligatorio.', 'danger');
+            return;
+        }
+
+        botonGuardar.disabled = true;
+        botonGuardar.textContent = 'Guardando...';
+        limpiarMensaje(mensaje);
+
+        try {
+            const respuesta = await fetch(
+                id ? '/api/tiendas/' + id : '/api/tiendas',
+                {
+                    method: id ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ nombre: nombre })
+                }
+            );
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(resultado.error || 'No se pudo guardar la tienda.');
+            }
+
+            mostrarMensaje(
+                mensaje,
+                resultado.mensaje || 'Tienda guardada correctamente.',
+                'success'
+            );
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 700);
+
+        } catch (error) {
+            mostrarMensaje(mensaje, error.message, 'danger');
+        } finally {
+            botonGuardar.disabled = false;
+            botonGuardar.textContent = id ? 'Guardar cambios' : 'Guardar tienda';
+        }
+    });
+
+    // ABRIR CONFIRMACIÓN
+    document.querySelectorAll('.btn-eliminar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            tiendaAEliminar = Number(this.dataset.id);
+            nombreEliminar.textContent = this.dataset.nombre;
+
+            limpiarMensaje(mensajeEliminar);
+            botonEliminar.disabled = false;
+            botonEliminar.innerHTML = '<i class="bi bi-trash"></i> Sí, eliminar';
+
+            modalEliminar.show();
+        });
+    });
+
+    // ELIMINAR TIENDA
+    botonEliminar.addEventListener('click', async function () {
+        if (tiendaAEliminar === null) {
+            return;
+        }
+
+        botonEliminar.disabled = true;
+        botonEliminar.textContent = 'Eliminando...';
+        limpiarMensaje(mensajeEliminar);
+
+        try {
+            const respuesta = await fetch('/api/tiendas/' + tiendaAEliminar, {
+                method: 'DELETE'
+            });
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(resultado.error || 'No se pudo eliminar la tienda.');
+            }
+
+            mostrarMensaje(
+                mensajeEliminar,
+                resultado.mensaje || 'Tienda eliminada correctamente.',
+                'success'
+            );
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 700);
+
+        } catch (error) {
+            mostrarMensaje(mensajeEliminar, error.message, 'danger');
+        } finally {
+            botonEliminar.disabled = false;
+            botonEliminar.innerHTML = '<i class="bi bi-trash"></i> Sí, eliminar';
+        }
+    });
+
+    await cargarCantidadEmpleados();
+});
+</script>
+{% endblock %}

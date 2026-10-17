@@ -1,0 +1,431 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Puestos - Sterenfix{% endblock %}
+
+{% block body %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="page-title">Administración de puestos</h1>
+        <p class="subtitle">Gestioná los puestos de trabajo de Sterenfix.</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+        <span class="badge text-bg-primary px-3 py-2">
+            {{ puestos|length }} puestos
+        </span>
+
+        {% if is_granted('ROLE_ADMIN') %}
+
+        <button type="button" class="btn btn-primary" id="btnNuevoPuesto">
+            <i class="bi bi-plus-circle"></i>
+            Nuevo puesto
+        </button>
+
+        {% endif %}
+    </div>
+</div>
+
+<div id="alertaPagina" class="alert d-none" role="alert"></div>
+
+<div class="section-card">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <h5 class="fw-bold mb-0">Listado de puestos</h5>
+
+        <input type="search"
+               id="buscarPuesto"
+               class="form-control"
+               placeholder="Buscar puesto..."
+               aria-label="Buscar puesto"
+               style="max-width:280px;">
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle" id="tablaPuestos">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre del puesto</th>
+                    <th>Empleados asignados</th>
+                    {% if is_granted('ROLE_ADMIN') %}<th>Acciones</th>{% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for puesto in puestos %}
+                    <tr>
+                        <td>{{ puesto.id }}</td>
+
+                        <td class="fw-medium">
+                            <i class="bi bi-briefcase text-primary me-2"></i>
+                            {{ puesto.nombre }}
+                        </td>
+
+                        <td>
+                            <span class="badge text-bg-light border empleados-puesto"
+                                  data-id="{{ puesto.id }}">
+                                Consultando...
+                            </span>
+                        </td>
+
+                        {% if is_granted('ROLE_ADMIN') %}
+
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary btn-editar"
+                                        data-id="{{ puesto.id }}"
+                                        data-nombre="{{ puesto.nombre }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                    Editar
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-eliminar"
+                                        data-id="{{ puesto.id }}"
+                                        data-nombre="{{ puesto.nombre }}">
+                                    <i class="bi bi-trash"></i>
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+
+                        {% endif %}
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="{{ is_granted('ROLE_ADMIN') ? 4 : 3 }}" class="text-center text-muted py-4">
+                            No hay puestos registrados.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# MODAL AGREGAR Y EDITAR #}
+
+<div class="modal fade"
+     id="modalPuesto"
+     tabindex="-1"
+     aria-labelledby="tituloModalPuesto"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloModalPuesto">Nuevo puesto</h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <form id="formPuesto">
+                <div class="modal-body">
+                    <div id="mensajePuesto" class="alert d-none" role="alert"></div>
+
+                    <input type="hidden" id="puestoId">
+
+                    <label for="nombrePuesto" class="form-label">
+                        Nombre del puesto
+                    </label>
+
+                    <input type="text"
+                           id="nombrePuesto"
+                           name="nombre"
+                           class="form-control"
+                           maxlength="150"
+                           placeholder="Ej. Analista de soporte"
+                           required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" id="btnGuardarPuesto" class="btn btn-primary">
+                        Guardar puesto
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{# MODAL CONFIRMAR ELIMINACIÓN #}
+
+<div class="modal fade"
+     id="modalEliminarPuesto"
+     tabindex="-1"
+     aria-labelledby="tituloEliminarPuesto"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloEliminarPuesto">
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                    Confirmar eliminación
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="mensajeEliminar" class="alert d-none" role="alert"></div>
+
+                <p>¿Estás seguro de que querés eliminar este puesto?</p>
+                <p id="nombrePuestoEliminar" class="fw-bold"></p>
+
+                <p class="text-danger mb-0">
+                    No se puede eliminar si existen empleados asignados.
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        class="btn btn-danger"
+                        id="btnConfirmarEliminar">
+                    <i class="bi bi-trash"></i>
+                    Sí, eliminar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+
+    const modalPuesto = new bootstrap.Modal(
+        document.getElementById('modalPuesto')
+    );
+
+    const modalEliminar = new bootstrap.Modal(
+        document.getElementById('modalEliminarPuesto')
+    );
+
+    const formulario = document.getElementById('formPuesto');
+    const campoId = document.getElementById('puestoId');
+    const campoNombre = document.getElementById('nombrePuesto');
+    const tituloModal = document.getElementById('tituloModalPuesto');
+    const botonGuardar = document.getElementById('btnGuardarPuesto');
+    const botonEliminar = document.getElementById('btnConfirmarEliminar');
+
+    const mensaje = document.getElementById('mensajePuesto');
+    const mensajeEliminar = document.getElementById('mensajeEliminar');
+    const nombreEliminar = document.getElementById('nombrePuestoEliminar');
+    const buscador = document.getElementById('buscarPuesto');
+
+    let puestoAEliminar = null;
+
+    function mostrarMensaje(elemento, texto, tipo) {
+        elemento.className = 'alert alert-' + tipo;
+        elemento.textContent = texto;
+    }
+
+    function limpiarMensaje(elemento) {
+        elemento.className = 'alert d-none';
+        elemento.textContent = '';
+    }
+
+    // BUSCADOR
+    buscador.addEventListener('input', function () {
+        const busqueda = this.value.toLowerCase().trim();
+
+        document.querySelectorAll('#tablaPuestos tbody tr').forEach(function (fila) {
+            const nombre = fila.cells[1]?.textContent.toLowerCase() || '';
+            fila.style.display = nombre.includes(busqueda) ? '' : 'none';
+        });
+    });
+
+    // CANTIDAD DE EMPLEADOS ASIGNADOS
+    async function cargarCantidadEmpleados() {
+        try {
+            const respuesta = await fetch('/api/empleados');
+
+            if (!respuesta.ok) {
+                throw new Error('No se pudieron consultar los empleados.');
+            }
+
+            const empleados = await respuesta.json();
+
+            if (!Array.isArray(empleados)) {
+                throw new Error('Respuesta de empleados inválida.');
+            }
+
+            document.querySelectorAll('.empleados-puesto').forEach(function (etiqueta) {
+                const puestoId = Number(etiqueta.dataset.id);
+
+                const cantidad = empleados.filter(function (empleado) {
+                    return Number(empleado.puestoId) === puestoId;
+                }).length;
+
+                etiqueta.textContent = cantidad;
+            });
+
+        } catch (error) {
+            console.error(error);
+
+            document.querySelectorAll('.empleados-puesto').forEach(function (etiqueta) {
+                etiqueta.textContent = 'No disponible';
+            });
+        }
+    }
+
+    // NUEVO PUESTO
+    document.getElementById('btnNuevoPuesto')?.addEventListener('click', function () {
+        formulario.reset();
+        campoId.value = '';
+        tituloModal.textContent = 'Nuevo puesto';
+        botonGuardar.textContent = 'Guardar puesto';
+        limpiarMensaje(mensaje);
+        modalPuesto.show();
+    });
+
+    // EDITAR PUESTO
+    document.querySelectorAll('.btn-editar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            campoId.value = this.dataset.id;
+            campoNombre.value = this.dataset.nombre;
+
+            tituloModal.textContent = 'Editar puesto';
+            botonGuardar.textContent = 'Guardar cambios';
+
+            limpiarMensaje(mensaje);
+            modalPuesto.show();
+        });
+    });
+
+    // CREAR O ACTUALIZAR
+    formulario.addEventListener('submit', async function (evento) {
+        evento.preventDefault();
+
+        const id = campoId.value;
+        const nombre = campoNombre.value.trim();
+
+        if (!nombre) {
+            mostrarMensaje(mensaje, 'El nombre del puesto es obligatorio.', 'danger');
+            return;
+        }
+
+        botonGuardar.disabled = true;
+        botonGuardar.textContent = 'Guardando...';
+        limpiarMensaje(mensaje);
+
+        try {
+            const respuesta = await fetch(
+                id ? '/api/puestos/' + id : '/api/puestos',
+                {
+                    method: id ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ nombre: nombre })
+                }
+            );
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(resultado.error || 'No se pudo guardar el puesto.');
+            }
+
+            mostrarMensaje(
+                mensaje,
+                resultado.mensaje || 'Puesto guardado correctamente.',
+                'success'
+            );
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 700);
+
+        } catch (error) {
+            mostrarMensaje(mensaje, error.message, 'danger');
+        } finally {
+            botonGuardar.disabled = false;
+            botonGuardar.textContent = id ? 'Guardar cambios' : 'Guardar puesto';
+        }
+    });
+
+    // CONFIRMAR ELIMINACIÓN
+    document.querySelectorAll('.btn-eliminar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            puestoAEliminar = Number(this.dataset.id);
+            nombreEliminar.textContent = this.dataset.nombre;
+
+            limpiarMensaje(mensajeEliminar);
+            botonEliminar.disabled = false;
+            botonEliminar.innerHTML = '<i class="bi bi-trash"></i> Sí, eliminar';
+
+            modalEliminar.show();
+        });
+    });
+
+    // ELIMINAR
+    botonEliminar.addEventListener('click', async function () {
+        if (puestoAEliminar === null) {
+            return;
+        }
+
+        botonEliminar.disabled = true;
+        botonEliminar.textContent = 'Eliminando...';
+        limpiarMensaje(mensajeEliminar);
+
+        try {
+            const respuesta = await fetch('/api/puestos/' + puestoAEliminar, {
+                method: 'DELETE'
+            });
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(resultado.error || 'No se pudo eliminar el puesto.');
+            }
+
+            mostrarMensaje(
+                mensajeEliminar,
+                resultado.mensaje || 'Puesto eliminado correctamente.',
+                'success'
+            );
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 700);
+
+        } catch (error) {
+            mostrarMensaje(mensajeEliminar, error.message, 'danger');
+        } finally {
+            botonEliminar.disabled = false;
+            botonEliminar.innerHTML = '<i class="bi bi-trash"></i> Sí, eliminar';
+        }
+    });
+
+    await cargarCantidadEmpleados();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,994 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Reportes - Sterenfix{% endblock %}
+
+{% block body %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="page-title">Centro de reportes</h1>
+        <p class="subtitle">
+            Reportes generales, salarios y registros laborales de Sterenfix.
+        </p>
+    </div>
+
+    <button class="btn btn-outline-primary" id="btnActualizar" type="button">
+        <i class="bi bi-arrow-clockwise"></i>
+        Actualizar datos
+    </button>
+</div>
+
+<div id="alertaReportes" class="alert d-none" role="alert"></div>
+
+{# INDICADORES GENERALES #}
+
+<div class="row g-3 mb-4">
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="section-card h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">Total empleados</span>
+                <i class="bi bi-people fs-4 text-primary"></i>
+            </div>
+            <div class="fs-2 fw-bold mt-3" id="totalEmpleados">—</div>
+            <small class="text-muted">Personal registrado</small>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="section-card h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">Nómina mensual</span>
+                <i class="bi bi-cash-stack fs-4 text-primary"></i>
+            </div>
+            <div class="fs-4 fw-bold mt-3" id="totalSalarios">—</div>
+            <small class="text-muted">Total de salarios registrados</small>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="section-card h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">Logros</span>
+                <i class="bi bi-award fs-4 text-success"></i>
+            </div>
+            <div class="fs-2 fw-bold text-success mt-3" id="totalPositivos">—</div>
+            <small class="text-muted">Reconocimientos positivos</small>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="section-card h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">Llamadas de atención</span>
+                <i class="bi bi-exclamation-circle fs-4 text-danger"></i>
+            </div>
+            <div class="fs-2 fw-bold text-danger mt-3" id="totalNegativos">—</div>
+            <small class="text-muted">Registros negativos</small>
+        </div>
+    </div>
+
+</div>
+
+{# GRÁFICAS E INDICADORES #}
+
+<div class="row g-4 mb-4">
+
+    <div class="col-12 col-xl-6">
+        <div class="section-card h-100">
+            <h5 class="fw-bold mb-1">Distribución salarial por tienda</h5>
+            <p class="text-muted small mb-4">
+                Total de salarios por sucursal.
+            </p>
+
+            <div id="graficaTiendas">
+                <p class="text-muted">Cargando información...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-6">
+        <div class="section-card h-100">
+            <h5 class="fw-bold mb-1">Registros laborales</h5>
+            <p class="text-muted small mb-4">
+                Comparación de logros y llamadas de atención.
+            </p>
+
+            <div class="d-flex justify-content-between mb-2">
+                <span>Logros</span>
+                <strong id="etiquetaPositivos">0</strong>
+            </div>
+
+            <div class="progress mb-4" style="height:12px">
+                <div
+                    id="barraPositivos"
+                    class="progress-bar bg-success"
+                    role="progressbar"
+                    style="width:0%"
+                    aria-label="Registros positivos">
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mb-2">
+                <span>Llamadas de atención</span>
+                <strong id="etiquetaNegativos">0</strong>
+            </div>
+
+            <div class="progress mb-4" style="height:12px">
+                <div
+                    id="barraNegativos"
+                    class="progress-bar bg-danger"
+                    role="progressbar"
+                    style="width:0%"
+                    aria-label="Registros negativos">
+                </div>
+            </div>
+
+            <div class="rounded-3 p-3 bg-light">
+                <span class="text-muted">Total de registros:</span>
+                <strong id="totalRegistros">0</strong>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{# REPORTE DE SALARIOS AGRUPADOS POR TIENDA #}
+
+<div class="section-card mb-4">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <div>
+            <h5 class="fw-bold mb-1">
+                Reporte de salarios por tienda
+            </h5>
+            <p class="text-muted small mb-0">
+                Empleados agrupados por sucursal y ordenados
+                de mayor a menor salario.
+            </p>
+        </div>
+
+        <span class="badge text-bg-primary">
+            Reporte por sucursal
+        </span>
+    </div>
+
+    <div id="listadoSalariosTiendas">
+        <p class="text-muted">Cargando salarios por tienda...</p>
+    </div>
+
+</div>
+
+{# REPORTE GENERAL DE EMPLEADOS #}
+
+<div class="section-card mb-4">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <div>
+            <h5 class="fw-bold mb-1">
+                Reporte general de empleados
+            </h5>
+            <p class="text-muted small mb-0">
+                Información completa del personal registrado.
+            </p>
+        </div>
+
+        <input
+            type="search"
+            id="buscarEmpleadoReporte"
+            class="form-control"
+            placeholder="Buscar empleado..."
+            aria-label="Buscar empleado"
+            style="max-width:280px">
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Fotografía</th>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Fecha de nacimiento</th>
+                    <th>Puesto</th>
+                    <th>Tienda</th>
+                    <th class="text-end">Salario</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+
+            <tbody id="cuerpoEmpleadosReporte">
+                <tr>
+                    <td colspan="8" class="text-center text-muted">
+                        Cargando empleados...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 border-top pt-3">
+        <span class="text-muted">
+            Total de salarios de los empleados registrados
+        </span>
+
+        <strong class="fs-5 text-primary" id="totalSalariosTabla">
+            —
+        </strong>
+    </div>
+
+</div>
+
+{# REPORTE DE LOGROS Y LLAMADAS DE ATENCIÓN #}
+
+<div class="section-card mb-4">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <div>
+            <h5 class="fw-bold mb-1">
+                Reporte de logros y llamadas de atención
+            </h5>
+            <p class="text-muted small mb-0">
+                Historial laboral con fecha, empleado y descripción.
+            </p>
+        </div>
+
+        <select
+            id="filtroRegistro"
+            class="form-select"
+            style="max-width:230px"
+            aria-label="Filtrar registros">
+
+            <option value="">Todos los registros</option>
+            <option value="positivo">Solo logros</option>
+            <option value="negativo">Solo llamadas de atención</option>
+
+        </select>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Empleado</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+
+            <tbody id="cuerpoHistorialReporte">
+                <tr>
+                    <td colspan="4" class="text-center text-muted">
+                        Cargando registros...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{# MODAL DE CONSULTA INDIVIDUAL #}
+
+<div
+    class="modal fade"
+    id="modalDetalleEmpleado"
+    tabindex="-1"
+    aria-labelledby="tituloDetalleEmpleado"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="tituloDetalleEmpleado">
+                    Detalle del empleado
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar">
+                </button>
+            </div>
+
+            <div class="modal-body" id="contenidoDetalleEmpleado">
+                Cargando información...
+            </div>
+
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+
+{{ parent() }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const alerta = document.getElementById('alertaReportes');
+    const cuerpoEmpleados = document.getElementById('cuerpoEmpleadosReporte');
+    const cuerpoHistorial = document.getElementById('cuerpoHistorialReporte');
+    const graficaTiendas = document.getElementById('graficaTiendas');
+    const listadoTiendas = document.getElementById('listadoSalariosTiendas');
+
+    const elementoModal = document.getElementById('modalDetalleEmpleado');
+
+    const modalDetalle = bootstrap.Modal.getOrCreateInstance(
+        elementoModal
+    );
+
+    let empleadosActuales = [];
+    let registrosActuales = [];
+
+    const moneda = new Intl.NumberFormat('es-GT', {
+        style: 'currency',
+        currency: 'GTQ',
+        minimumFractionDigits: 2
+    });
+
+    function crearCelda(texto) {
+        const celda = document.createElement('td');
+        celda.textContent = texto ?? '—';
+        return celda;
+    }
+
+    function mostrarAlerta(texto, tipo = 'danger') {
+        alerta.className = 'alert alert-' + tipo;
+        alerta.textContent = texto;
+    }
+
+    function ocultarAlerta() {
+        alerta.className = 'alert d-none';
+        alerta.textContent = '';
+    }
+
+    function crearMensajeTabla(texto, columnas) {
+        const fila = document.createElement('tr');
+        const celda = crearCelda(texto);
+
+        celda.colSpan = columnas;
+        celda.className = 'text-center text-muted py-4';
+
+        fila.appendChild(celda);
+        return fila;
+    }
+
+    function crearFotografia(ruta, nombre, tamano = 48) {
+        if (!ruta || typeof ruta !== 'string' || !ruta.startsWith('/uploads/empleados/')) {
+            const icono = document.createElement('div');
+
+            icono.className =
+                'bg-light border rounded-circle d-flex ' +
+                'align-items-center justify-content-center text-secondary';
+
+            icono.style.width = tamano + 'px';
+            icono.style.height = tamano + 'px';
+
+            const simbolo = document.createElement('i');
+            simbolo.className = 'bi bi-person-fill fs-4';
+
+            icono.appendChild(simbolo);
+            return icono;
+        }
+
+        const imagen = document.createElement('img');
+
+        imagen.src = ruta;
+        imagen.alt = 'Fotografía de ' + nombre;
+        imagen.width = tamano;
+        imagen.height = tamano;
+
+        imagen.className = 'rounded-circle border';
+        imagen.style.objectFit = 'cover';
+
+        imagen.onerror = function () {
+            imagen.replaceWith(crearFotografia(null, nombre, tamano));
+        };
+
+        return imagen;
+    }
+
+    async function consultar(url) {
+        const respuesta = await fetch(url, {
+            headers: {
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!respuesta.ok) {
+            throw new Error(
+                'Error al consultar ' + url +
+                ' (HTTP ' + respuesta.status + ').'
+            );
+        }
+
+        const tipoContenido = respuesta.headers.get('content-type') || '';
+
+        if (!tipoContenido.includes('application/json')) {
+            throw new Error(
+                'La respuesta no es JSON. Verificá que tu sesión esté activa.'
+            );
+        }
+
+        return respuesta.json();
+    }
+
+    // ==========================================
+    // REPORTE GENERAL DE EMPLEADOS
+    // ==========================================
+
+    function renderizarEmpleados() {
+        const busqueda = document
+            .getElementById('buscarEmpleadoReporte')
+            .value.toLowerCase().trim();
+
+        cuerpoEmpleados.replaceChildren();
+
+        const filtrados = empleadosActuales.filter(function (empleado) {
+            const texto = [
+                empleado.nombres,
+                empleado.apellidos,
+                empleado.puesto,
+                empleado.tienda
+            ].join(' ').toLowerCase();
+
+            return texto.includes(busqueda);
+        });
+
+        if (!filtrados.length) {
+            cuerpoEmpleados.appendChild(
+                crearMensajeTabla(
+                    'No hay empleados que coincidan con la búsqueda.',
+                    8
+                )
+            );
+            return;
+        }
+
+        filtrados.forEach(function (empleado) {
+            const fila = document.createElement('tr');
+
+            const nombreCompleto =
+                empleado.nombres + ' ' + empleado.apellidos;
+
+            const celdaFoto = document.createElement('td');
+
+            celdaFoto.appendChild(
+                crearFotografia(
+                    empleado.fotografia,
+                    nombreCompleto,
+                    48
+                )
+            );
+
+            fila.appendChild(celdaFoto);
+
+            fila.appendChild(crearCelda(empleado.nombres));
+            fila.appendChild(crearCelda(empleado.apellidos));
+            fila.appendChild(crearCelda(empleado.fechaNacimiento));
+            fila.appendChild(crearCelda(empleado.puesto));
+            fila.appendChild(crearCelda(empleado.tienda));
+
+            const celdaSalario = crearCelda(
+                moneda.format(Number(empleado.salario))
+            );
+
+            celdaSalario.className = 'text-end fw-semibold';
+
+            fila.appendChild(celdaSalario);
+
+            const celdaAccion = document.createElement('td');
+
+            const boton = document.createElement('button');
+            boton.type = 'button';
+            boton.className = 'btn btn-sm btn-outline-primary';
+            boton.textContent = 'Ver detalle';
+
+            boton.addEventListener('click', function () {
+                verDetalleEmpleado(empleado.id);
+            });
+
+            celdaAccion.appendChild(boton);
+            fila.appendChild(celdaAccion);
+
+            cuerpoEmpleados.appendChild(fila);
+        });
+    }
+
+    // ==========================================
+    // GRÁFICA DE SALARIOS POR TIENDA
+    // ==========================================
+
+    function renderizarGraficaTiendas(tiendas) {
+        graficaTiendas.replaceChildren();
+
+        if (!tiendas.length) {
+            graficaTiendas.textContent =
+                'No hay tiendas registradas.';
+            return;
+        }
+
+        const maximo = Math.max(
+            ...tiendas.map(function (tienda) {
+                return Number(tienda.totalSalarios);
+            }),
+            1
+        );
+
+        tiendas.forEach(function (tienda) {
+            const contenedor = document.createElement('div');
+            contenedor.className = 'mb-4';
+
+            const encabezado = document.createElement('div');
+            encabezado.className =
+                'd-flex justify-content-between gap-3 mb-2';
+
+            const nombre = document.createElement('span');
+            nombre.className = 'fw-medium';
+            nombre.textContent = tienda.tienda;
+
+            const total = document.createElement('strong');
+            total.textContent = moneda.format(
+                Number(tienda.totalSalarios)
+            );
+
+            encabezado.append(nombre, total);
+
+            const progreso = document.createElement('div');
+            progreso.className = 'progress';
+            progreso.style.height = '10px';
+
+            const barra = document.createElement('div');
+            barra.className = 'progress-bar';
+
+            barra.style.width = (
+                Number(tienda.totalSalarios) / maximo * 100
+            ) + '%';
+
+            barra.setAttribute('role', 'progressbar');
+            barra.setAttribute('aria-label', tienda.tienda);
+
+            progreso.appendChild(barra);
+
+            const cantidad = document.createElement('small');
+            cantidad.className = 'text-muted';
+
+            cantidad.textContent =
+                tienda.cantidadEmpleados + ' empleados';
+
+            contenedor.append(encabezado, progreso, cantidad);
+
+            graficaTiendas.appendChild(contenedor);
+        });
+    }
+
+    // ==========================================
+    // EMPLEADOS AGRUPADOS POR TIENDA
+    // ==========================================
+
+    function renderizarSalariosPorTienda(tiendas) {
+        listadoTiendas.replaceChildren();
+
+        if (!tiendas.length) {
+            listadoTiendas.textContent =
+                'No hay tiendas registradas.';
+            return;
+        }
+
+        tiendas.forEach(function (tienda) {
+            const contenedor = document.createElement('div');
+            contenedor.className = 'mb-4';
+
+            const titulo = document.createElement('div');
+            titulo.className =
+                'd-flex justify-content-between align-items-center ' +
+                'flex-wrap gap-2 mb-3';
+
+            const nombre = document.createElement('h6');
+            nombre.className = 'fw-bold mb-0';
+            nombre.textContent = tienda.tienda;
+
+            const total = document.createElement('span');
+            total.className = 'badge text-bg-primary';
+
+            total.textContent =
+                'Total: ' +
+                moneda.format(Number(tienda.totalSalarios));
+
+            titulo.append(nombre, total);
+            contenedor.appendChild(titulo);
+
+            const empleados = [...(tienda.empleados || [])];
+
+            empleados.sort(function (a, b) {
+                return Number(b.salario) - Number(a.salario);
+            });
+
+            if (!empleados.length) {
+                const vacio = document.createElement('p');
+                vacio.className = 'text-muted small';
+
+                vacio.textContent =
+                    'Esta tienda no tiene empleados asignados.';
+
+                contenedor.appendChild(vacio);
+            } else {
+                const responsive = document.createElement('div');
+                responsive.className = 'table-responsive';
+
+                const tabla = document.createElement('table');
+                tabla.className =
+                    'table table-sm table-hover align-middle';
+
+                const thead = document.createElement('thead');
+                const filaEncabezado = document.createElement('tr');
+
+                ['Empleado', 'Puesto', 'Salario'].forEach(function (texto) {
+                    const th = document.createElement('th');
+                    th.textContent = texto;
+                    filaEncabezado.appendChild(th);
+                });
+
+                thead.appendChild(filaEncabezado);
+
+                const tbody = document.createElement('tbody');
+
+                empleados.forEach(function (empleado) {
+                    const fila = document.createElement('tr');
+
+                    fila.appendChild(
+                        crearCelda(
+                            empleado.nombres + ' ' +
+                            empleado.apellidos
+                        )
+                    );
+
+                    fila.appendChild(
+                        crearCelda(empleado.puesto)
+                    );
+
+                    const salario = crearCelda(
+                        moneda.format(Number(empleado.salario))
+                    );
+
+                    salario.className = 'fw-semibold';
+                    fila.appendChild(salario);
+
+                    tbody.appendChild(fila);
+                });
+
+                tabla.append(thead, tbody);
+                responsive.appendChild(tabla);
+                contenedor.appendChild(responsive);
+            }
+
+            listadoTiendas.appendChild(contenedor);
+        });
+    }
+
+    // ==========================================
+    // REPORTE DE LOGROS Y LLAMADAS DE ATENCIÓN
+    // ==========================================
+
+    function renderizarHistorial() {
+        const filtro = document.getElementById('filtroRegistro').value;
+
+        cuerpoHistorial.replaceChildren();
+
+        const filtrados = registrosActuales.filter(function (registro) {
+            return !filtro || registro.tipo === filtro;
+        });
+
+        if (!filtrados.length) {
+            cuerpoHistorial.appendChild(
+                crearMensajeTabla(
+                    'No hay registros para este filtro.',
+                    4
+                )
+            );
+            return;
+        }
+
+        filtrados.forEach(function (registro) {
+            const fila = document.createElement('tr');
+
+            fila.appendChild(crearCelda(registro.fecha));
+            fila.appendChild(crearCelda(registro.empleado));
+
+            const celdaTipo = document.createElement('td');
+            const badge = document.createElement('span');
+
+            badge.className = registro.tipo === 'positivo'
+                ? 'badge text-bg-success'
+                : 'badge text-bg-danger';
+
+            badge.textContent = registro.tipo === 'positivo'
+                ? 'Logro'
+                : 'Llamada de atención';
+
+            celdaTipo.appendChild(badge);
+
+            fila.appendChild(celdaTipo);
+            fila.appendChild(crearCelda(registro.descripcion));
+
+            cuerpoHistorial.appendChild(fila);
+        });
+    }
+
+    // ==========================================
+    // CONSULTA INDIVIDUAL DE EMPLEADO
+    // ==========================================
+
+    async function verDetalleEmpleado(id) {
+        const contenido = document.getElementById(
+            'contenidoDetalleEmpleado'
+        );
+
+        const titulo = document.getElementById(
+            'tituloDetalleEmpleado'
+        );
+
+        titulo.textContent = 'Detalle del empleado';
+        contenido.textContent = 'Cargando información...';
+
+        modalDetalle.show();
+
+        try {
+            const empleado = await consultar(
+                '/api/reportes/empleado/' + id
+            );
+
+            const nombreCompleto =
+                empleado.nombres + ' ' + empleado.apellidos;
+
+            titulo.textContent = nombreCompleto;
+            contenido.replaceChildren();
+
+            const encabezado = document.createElement('div');
+            encabezado.className =
+                'd-flex align-items-center gap-3 mb-4';
+
+            encabezado.appendChild(
+                crearFotografia(
+                    empleado.fotografia,
+                    nombreCompleto,
+                    100
+                )
+            );
+
+            const datosNombre = document.createElement('div');
+
+            const nombre = document.createElement('h5');
+            nombre.className = 'fw-bold mb-1';
+            nombre.textContent = nombreCompleto;
+
+            const identificador = document.createElement('small');
+            identificador.className = 'text-muted';
+            identificador.textContent =
+                'Código de empleado: ' + empleado.id;
+
+            datosNombre.append(nombre, identificador);
+            encabezado.appendChild(datosNombre);
+
+            contenido.appendChild(encabezado);
+
+            const datos = document.createElement('div');
+            datos.className = 'row g-3 mb-4';
+
+            const campos = [
+                ['Nombres', empleado.nombres],
+                ['Apellidos', empleado.apellidos],
+                ['Fecha de nacimiento', empleado.fechaNacimiento],
+                ['Puesto', empleado.puesto],
+                ['Tienda', empleado.tienda],
+                [
+                    'Salario',
+                    moneda.format(Number(empleado.salario))
+                ]
+            ];
+
+            campos.forEach(function (campo) {
+                const columna = document.createElement('div');
+                columna.className = 'col-12 col-sm-6';
+
+                const etiqueta = document.createElement('div');
+                etiqueta.className = 'text-muted small';
+                etiqueta.textContent = campo[0];
+
+                const valor = document.createElement('div');
+                valor.className = 'fw-semibold';
+                valor.textContent = campo[1] ?? '—';
+
+                columna.append(etiqueta, valor);
+                datos.appendChild(columna);
+            });
+
+            contenido.appendChild(datos);
+
+            const tituloHistorial = document.createElement('h6');
+            tituloHistorial.className = 'fw-bold mb-3';
+            tituloHistorial.textContent = 'Historial laboral';
+
+            contenido.appendChild(tituloHistorial);
+
+            const registros = empleado.registros || [];
+
+            if (!registros.length) {
+                const vacio = document.createElement('p');
+                vacio.className = 'text-muted';
+
+                vacio.textContent =
+                    'Este empleado no tiene registros laborales.';
+
+                contenido.appendChild(vacio);
+                return;
+            }
+
+            const lista = document.createElement('div');
+            lista.className = 'list-group';
+
+            registros.forEach(function (registro) {
+                const elemento = document.createElement('div');
+                elemento.className = 'list-group-item';
+
+                const tipo = document.createElement('span');
+
+                tipo.className = registro.tipo === 'positivo'
+                    ? 'badge text-bg-success me-2'
+                    : 'badge text-bg-danger me-2';
+
+                tipo.textContent = registro.tipo === 'positivo'
+                    ? 'Logro'
+                    : 'Llamada de atención';
+
+                const fecha = document.createElement('small');
+                fecha.className = 'text-muted';
+                fecha.textContent = registro.fecha ?? '';
+
+                const descripcion = document.createElement('p');
+                descripcion.className = 'mb-0 mt-2';
+                descripcion.textContent = registro.descripcion;
+
+                elemento.append(tipo, fecha, descripcion);
+                lista.appendChild(elemento);
+            });
+
+            contenido.appendChild(lista);
+
+        } catch (error) {
+            contenido.textContent = error.message;
+        }
+    }
+
+    // ==========================================
+    // CARGAR INFORMACIÓN DE LAS API
+    // ==========================================
+
+    async function cargarReportes() {
+        ocultarAlerta();
+
+        const botonActualizar = document.getElementById(
+            'btnActualizar'
+        );
+
+        botonActualizar.disabled = true;
+
+        try {
+            const [
+                reporteEmpleados,
+                reporteTiendas,
+                reporteRegistros
+            ] = await Promise.all([
+                consultar('/api/reportes/empleados'),
+                consultar('/api/reportes/salarios-tiendas'),
+                consultar('/api/reportes/registros')
+            ]);
+
+            empleadosActuales = reporteEmpleados.empleados || [];
+            registrosActuales = reporteRegistros.registros || [];
+
+            document.getElementById('totalEmpleados').textContent =
+                reporteEmpleados.totalEmpleados;
+
+            document.getElementById('totalSalarios').textContent =
+                moneda.format(
+                    Number(reporteEmpleados.totalSalarios)
+                );
+
+            document.getElementById('totalSalariosTabla').textContent =
+                moneda.format(
+                    Number(reporteEmpleados.totalSalarios)
+                );
+
+            document.getElementById('totalPositivos').textContent =
+                reporteRegistros.totalPositivos;
+
+            document.getElementById('totalNegativos').textContent =
+                reporteRegistros.totalNegativos;
+
+            document.getElementById('totalRegistros').textContent =
+                reporteRegistros.totalRegistros;
+
+            document.getElementById('etiquetaPositivos').textContent =
+                reporteRegistros.totalPositivos;
+
+            document.getElementById('etiquetaNegativos').textContent =
+                reporteRegistros.totalNegativos;
+
+            const total = Number(reporteRegistros.totalRegistros);
+
+            const porcentajePositivos = total
+                ? Number(reporteRegistros.totalPositivos) / total * 100
+                : 0;
+
+            const porcentajeNegativos = total
+                ? Number(reporteRegistros.totalNegativos) / total * 100
+                : 0;
+
+            document.getElementById('barraPositivos').style.width =
+                porcentajePositivos + '%';
+
+            document.getElementById('barraNegativos').style.width =
+                porcentajeNegativos + '%';
+
+            renderizarGraficaTiendas(reporteTiendas);
+            renderizarSalariosPorTienda(reporteTiendas);
+            renderizarEmpleados();
+            renderizarHistorial();
+
+        } catch (error) {
+            mostrarAlerta(
+                'No fue posible cargar los reportes. ' +
+                error.message,
+                'danger'
+            );
+
+            console.error('Error en reportes:', error);
+
+        } finally {
+            botonActualizar.disabled = false;
+        }
+    }
+
+    // ==========================================
+    // EVENTOS
+    // ==========================================
+
+    document.getElementById('btnActualizar').addEventListener(
+        'click',
+        cargarReportes
+    );
+
+    document.getElementById('buscarEmpleadoReporte').addEventListener(
+        'input',
+        renderizarEmpleados
+    );
+
+    document.getElementById('filtroRegistro').addEventListener(
+        'change',
+        renderizarHistorial
+    );
+
+    cargarReportes();
+
+});
+</script>
+
+{% endblock %}
